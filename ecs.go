@@ -59,6 +59,7 @@ type View struct {
 	tag      Tag
 	entities QueryResultCollection
 	lock     *sync.RWMutex
+	index    uint64
 }
 
 type QueryResultCollection []*QueryResult
@@ -85,6 +86,11 @@ func (v *View) add(entity *Entity) {
 		v.tag,
 	))
 	v.lock.Unlock()
+	atomic.AddUint64(&v.index, 1)
+}
+
+func (v *View) Index() uint64 {
+	return atomic.LoadUint64(&v.index)
 }
 
 func (v *View) remove(entity *Entity) {
@@ -98,6 +104,7 @@ func (v *View) remove(entity *Entity) {
 		}
 	}
 	v.lock.RUnlock()
+	atomic.AddUint64(&v.index, 1)
 }
 
 type Manager struct {
